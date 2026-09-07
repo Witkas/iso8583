@@ -1,0 +1,45 @@
+# ISO 8583 field 18 merchant category codes (MCC).
+# code -> plain-language description. PARTIAL table: this covers a common
+# selection only, not the full ISO 18245 registry. Unknown codes are
+# reported as unknown rather than guessed.
+codes:
+  "4111": Local/suburban commuter passenger transportation
+  "4121": Taxicabs and limousines
+  "4511": Airlines and air carriers
+  "4722": Travel agencies and tour operators
+  "4784": Tolls and bridge fees
+  "4812": Telecommunication equipment and phone sales
+  "4814": Telecommunication services
+  "4899": Cable, satellite, and other pay television/radio
+  "4900": Utilities - electric, gas, water, sanitary
+  "5411": Grocery stores and supermarkets
+  "5412": Convenience stores
+  "5541": Service stations (with or without ancillary services)
+  "5542": Automated fuel dispensers
+  "5651": Family clothing stores
+  "5691": Men's and women's clothing stores
+  "5732": Electronics stores
+  "5734": Computer software stores
+  "5812": Eating places and restaurants
+  "5813": Drinking places (bars, taverns, nightclubs)
+  "5814": Fast food restaurants
+  "5912": Drug stores and pharmacies
+  "5921": Package stores - beer, wine, liquor
+  "5941": Sporting goods stores
+  "5942": Book stores
+  "5967": Direct marketing - inbound teleservices
+  "5999": Miscellaneous and specialty retail stores
+  "6011": Financial institutions - automated cash disbursements (ATM)
+  "6051": Non-financial institutions - foreign currency, money orders
+  "7011": Lodging - hotels, motels, resorts
+  "7230": Beauty and barber shops
+  "7372": Computer programming, data processing, integrated systems design
+  "7392": Management, consulting, and public relations services
+  "7995": Betting, casino gaming chips, lottery tickets
+  "8011": Doctors and physicians
+  "8021": Dentists and orthodontists
+  "8062": Hospitals
+  "8211": Elementary and secondary schools
+  "8220": Colleges, universities, professional schools
+  "8398": Charitable and social service organizations
+  "8999": Professional services (not elsewhere classified)

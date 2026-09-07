@@ -1,0 +1,61 @@
+# Message Type Indicator (MTI) lookups for the 1987 version.
+# A 1987 MTI is 4 digits: version(1) class(2) function(3) origin(4).
+# `names` maps the whole MTI to a common human label; `positions` decodes
+# each digit for MTIs not present in `names`.
+
+names:
+  "0100": Authorization Request
+  "0110": Authorization Response
+  "0120": Authorization Advice
+  "0121": Authorization Advice Repeat
+  "0130": Authorization Advice Response
+  "0200": Financial Transaction Request
+  "0210": Financial Transaction Response
+  "0220": Financial Transaction Advice
+  "0221": Financial Transaction Advice Repeat
+  "0230": Financial Transaction Advice Response
+  "0400": Reversal Request
+  "0410": Reversal Response
+  "0420": Reversal Advice
+  "0430": Reversal Advice Response
+  "0500": Reconciliation Request
+  "0510": Reconciliation Response
+  "0800": Network Management Request
+  "0810": Network Management Response
+  "0820": Network Management Advice
+
+version:
+  "0": "ISO 8583:1987"
+  "1": "ISO 8583:1993"
+  "2": "ISO 8583:2003"
+  "8": "National use"
+  "9": "Private use"
+
+class:
+  "1": Authorization
+  "2": Financial
+  "3": File action
+  "4": Reversal / chargeback
+  "5": Reconciliation
+  "6": Administrative
+  "7": Fee collection
+  "8": Network management
+  "9": Reserved
+
+function:
+  "0": Request
+  "1": Request response
+  "2": Advice
+  "3": Advice response
+  "4": Notification
+  "5": Notification acknowledgement
+  "6": Instruction
+  "7": Instruction acknowledgement
+
+origin:
+  "0": Acquirer
+  "1": Acquirer repeat
+  "2": Issuer
+  "3": Issuer repeat
+  "4": Other
+  "5": Other repeat

@@ -1,0 +1,6 @@
+# Compiled binary (built with `go build -o iso8583lens ./cmd/iso8583lens`)
+/iso8583lens
+
+# Go workspace / test artifacts
+*.test
+*.out

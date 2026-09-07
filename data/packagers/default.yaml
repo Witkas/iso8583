@@ -1,0 +1,159 @@
+# iso8583lens default packager
+#
+# Dialect: ISO 8583:1987, "ASCII" flavour.
+#   - MTI:     4 ASCII digits.
+#   - Bitmap:  raw binary, 8 bytes (64 bits) per block. Bit 1 (the most
+#              significant bit of the first byte) set means a secondary
+#              bitmap block follows, extending coverage to fields 65-128.
+#   - Fields:  ASCII. FIXED fields are a known number of characters.
+#              LLVAR fields carry a 2-digit ASCII length prefix, LLLVAR a
+#              3-digit ASCII length prefix; the prefix counts data characters.
+#
+# The `length` for FIXED fields and `maxLength` for LLVAR/LLLVAR are in
+# characters (which, for ASCII, equals bytes). A handful of fields are
+# binary in the standard (PIN block, MACs); in this ASCII dialect they are
+# carried as hex text, so their length is given in hex characters and noted.
+#
+# This layout follows the classic 128-element ISO 8583:1987 definition also
+# used as jPOS's generic packager reference. Encoding is declared per part so
+# a future binary/BCD dialect can reuse the same schema. Field names are
+# quoted because many contain commas.
+
+name: iso8583-1987-ascii
+description: ISO 8583:1987 generic layout, ASCII fields with a binary bitmap
+
+mti:
+  length: 4
+  encoding: ascii
+
+bitmap:
+  encoding: binary
+
+fields:
+  2:   { name: "Primary Account Number (PAN)",          type: LLVAR,  maxLength: 19,  encoding: ascii }
+  3:   { name: "Processing Code",                        type: FIXED,  length: 6,      encoding: ascii }
+  4:   { name: "Amount, Transaction",                    type: FIXED,  length: 12,     encoding: ascii }
+  5:   { name: "Amount, Settlement",                     type: FIXED,  length: 12,     encoding: ascii }
+  6:   { name: "Amount, Cardholder Billing",             type: FIXED,  length: 12,     encoding: ascii }
+  7:   { name: "Transmission Date and Time",             type: FIXED,  length: 10,     encoding: ascii }
+  8:   { name: "Amount, Cardholder Billing Fee",         type: FIXED,  length: 8,      encoding: ascii }
+  9:   { name: "Conversion Rate, Settlement",            type: FIXED,  length: 8,      encoding: ascii }
+  10:  { name: "Conversion Rate, Cardholder Billing",    type: FIXED,  length: 8,      encoding: ascii }
+  11:  { name: "System Trace Audit Number (STAN)",       type: FIXED,  length: 6,      encoding: ascii }
+  12:  { name: "Time, Local Transaction",                type: FIXED,  length: 6,      encoding: ascii }
+  13:  { name: "Date, Local Transaction",                type: FIXED,  length: 4,      encoding: ascii }
+  14:  { name: "Date, Expiration",                       type: FIXED,  length: 4,      encoding: ascii }
+  15:  { name: "Date, Settlement",                       type: FIXED,  length: 4,      encoding: ascii }
+  16:  { name: "Date, Conversion",                       type: FIXED,  length: 4,      encoding: ascii }
+  17:  { name: "Date, Capture",                          type: FIXED,  length: 4,      encoding: ascii }
+  18:  { name: "Merchant Type (MCC)",                    type: FIXED,  length: 4,      encoding: ascii }
+  19:  { name: "Acquiring Institution Country Code",     type: FIXED,  length: 3,      encoding: ascii }
+  20:  { name: "PAN Extended Country Code",              type: FIXED,  length: 3,      encoding: ascii }
+  21:  { name: "Forwarding Institution Country Code",    type: FIXED,  length: 3,      encoding: ascii }
+  22:  { name: "Point of Service Entry Mode",            type: FIXED,  length: 3,      encoding: ascii }
+  23:  { name: "Card Sequence Number",                   type: FIXED,  length: 3,      encoding: ascii }
+  24:  { name: "Network International Identifier (NII)", type: FIXED,  length: 3,      encoding: ascii }
+  25:  { name: "Point of Service Condition Code",        type: FIXED,  length: 2,      encoding: ascii }
+  26:  { name: "Point of Service PIN Capture Code",      type: FIXED,  length: 2,      encoding: ascii }
+  27:  { name: "Authorization ID Response Length",       type: FIXED,  length: 1,      encoding: ascii }
+  28:  { name: "Amount, Transaction Fee",                type: FIXED,  length: 9,      encoding: ascii } # x+n8 (leading C/D sign)
+  29:  { name: "Amount, Settlement Fee",                 type: FIXED,  length: 9,      encoding: ascii } # x+n8
+  30:  { name: "Amount, Transaction Processing Fee",     type: FIXED,  length: 9,      encoding: ascii } # x+n8
+  31:  { name: "Amount, Settlement Processing Fee",      type: FIXED,  length: 9,      encoding: ascii } # x+n8
+  32:  { name: "Acquiring Institution ID Code",          type: LLVAR,  maxLength: 11,  encoding: ascii }
+  33:  { name: "Forwarding Institution ID Code",         type: LLVAR,  maxLength: 11,  encoding: ascii }
+  34:  { name: "PAN Extended",                           type: LLVAR,  maxLength: 28,  encoding: ascii }
+  35:  { name: "Track 2 Data",                           type: LLVAR,  maxLength: 37,  encoding: ascii }
+  36:  { name: "Track 3 Data",                           type: LLLVAR, maxLength: 104, encoding: ascii }
+  37:  { name: "Retrieval Reference Number",             type: FIXED,  length: 12,     encoding: ascii }
+  38:  { name: "Authorization Identification Response",  type: FIXED,  length: 6,      encoding: ascii }
+  39:  { name: "Response Code",                          type: FIXED,  length: 2,      encoding: ascii }
+  40:  { name: "Service Restriction Code",               type: FIXED,  length: 3,      encoding: ascii }
+  41:  { name: "Card Acceptor Terminal ID",              type: FIXED,  length: 8,      encoding: ascii }
+  42:  { name: "Card Acceptor ID Code",                  type: FIXED,  length: 15,     encoding: ascii }
+  43:  { name: "Card Acceptor Name/Location",            type: FIXED,  length: 40,     encoding: ascii }
+  44:  { name: "Additional Response Data",               type: LLVAR,  maxLength: 25,  encoding: ascii }
+  45:  { name: "Track 1 Data",                           type: LLVAR,  maxLength: 76,  encoding: ascii }
+  46:  { name: "Additional Data - ISO",                  type: LLLVAR, maxLength: 999, encoding: ascii }
+  47:  { name: "Additional Data - National",             type: LLLVAR, maxLength: 999, encoding: ascii }
+  48:  { name: "Additional Data - Private",              type: LLLVAR, maxLength: 999, encoding: ascii }
+  49:  { name: "Currency Code, Transaction",             type: FIXED,  length: 3,      encoding: ascii }
+  50:  { name: "Currency Code, Settlement",              type: FIXED,  length: 3,      encoding: ascii }
+  51:  { name: "Currency Code, Cardholder Billing",      type: FIXED,  length: 3,      encoding: ascii }
+  52:  { name: "PIN Data",                               type: FIXED,  length: 16,     encoding: ascii } # 8-byte PIN block as hex text
+  53:  { name: "Security Related Control Information",   type: FIXED,  length: 16,     encoding: ascii }
+  54:  { name: "Additional Amounts",                     type: LLLVAR, maxLength: 120, encoding: ascii }
+  55:  { name: "ICC Data (EMV)",                         type: LLLVAR, maxLength: 999, encoding: ascii }
+  56:  { name: "Reserved (ISO)",                         type: LLLVAR, maxLength: 999, encoding: ascii }
+  57:  { name: "Reserved (National)",                    type: LLLVAR, maxLength: 999, encoding: ascii }
+  58:  { name: "Reserved (National)",                    type: LLLVAR, maxLength: 999, encoding: ascii }
+  59:  { name: "Reserved (National)",                    type: LLLVAR, maxLength: 999, encoding: ascii }
+  60:  { name: "Reserved (Private)",                     type: LLLVAR, maxLength: 999, encoding: ascii }
+  61:  { name: "Reserved (Private)",                     type: LLLVAR, maxLength: 999, encoding: ascii }
+  62:  { name: "Reserved (Private)",                     type: LLLVAR, maxLength: 999, encoding: ascii }
+  63:  { name: "Reserved (Private)",                     type: LLLVAR, maxLength: 999, encoding: ascii }
+  64:  { name: "Message Authentication Code (MAC)",      type: FIXED,  length: 16,     encoding: ascii } # 8-byte MAC as hex text
+  65:  { name: "Reserved (ISO)",                         type: FIXED,  length: 1,      encoding: ascii }
+  66:  { name: "Settlement Code",                        type: FIXED,  length: 1,      encoding: ascii }
+  67:  { name: "Extended Payment Code",                  type: FIXED,  length: 2,      encoding: ascii }
+  68:  { name: "Receiving Institution Country Code",     type: FIXED,  length: 3,      encoding: ascii }
+  69:  { name: "Settlement Institution Country Code",    type: FIXED,  length: 3,      encoding: ascii }
+  70:  { name: "Network Management Information Code",     type: FIXED,  length: 3,      encoding: ascii }
+  71:  { name: "Message Number",                          type: FIXED,  length: 4,      encoding: ascii }
+  72:  { name: "Message Number Last",                     type: FIXED,  length: 4,      encoding: ascii }
+  73:  { name: "Date, Action",                           type: FIXED,  length: 6,      encoding: ascii }
+  74:  { name: "Credits, Number",                        type: FIXED,  length: 10,     encoding: ascii }
+  75:  { name: "Credits, Reversal Number",               type: FIXED,  length: 10,     encoding: ascii }
+  76:  { name: "Debits, Number",                         type: FIXED,  length: 10,     encoding: ascii }
+  77:  { name: "Debits, Reversal Number",                type: FIXED,  length: 10,     encoding: ascii }
+  78:  { name: "Transfers, Number",                      type: FIXED,  length: 10,     encoding: ascii }
+  79:  { name: "Transfers, Reversal Number",             type: FIXED,  length: 10,     encoding: ascii }
+  80:  { name: "Inquiries, Number",                      type: FIXED,  length: 10,     encoding: ascii }
+  81:  { name: "Authorizations, Number",                 type: FIXED,  length: 10,     encoding: ascii }
+  82:  { name: "Credits, Processing Fee Amount",         type: FIXED,  length: 12,     encoding: ascii }
+  83:  { name: "Credits, Transaction Fee Amount",        type: FIXED,  length: 12,     encoding: ascii }
+  84:  { name: "Debits, Processing Fee Amount",          type: FIXED,  length: 12,     encoding: ascii }
+  85:  { name: "Debits, Transaction Fee Amount",         type: FIXED,  length: 12,     encoding: ascii }
+  86:  { name: "Credits, Amount",                        type: FIXED,  length: 16,     encoding: ascii }
+  87:  { name: "Credits, Reversal Amount",               type: FIXED,  length: 16,     encoding: ascii }
+  88:  { name: "Debits, Amount",                         type: FIXED,  length: 16,     encoding: ascii }
+  89:  { name: "Debits, Reversal Amount",                type: FIXED,  length: 16,     encoding: ascii }
+  90:  { name: "Original Data Elements",                 type: FIXED,  length: 42,     encoding: ascii }
+  91:  { name: "File Update Code",                        type: FIXED,  length: 1,      encoding: ascii }
+  92:  { name: "File Security Code",                      type: FIXED,  length: 2,      encoding: ascii }
+  93:  { name: "Response Indicator",                      type: FIXED,  length: 5,      encoding: ascii }
+  94:  { name: "Service Indicator",                       type: FIXED,  length: 7,      encoding: ascii }
+  95:  { name: "Replacement Amounts",                     type: FIXED,  length: 42,     encoding: ascii }
+  96:  { name: "Message Security Code",                   type: FIXED,  length: 16,     encoding: ascii } # 8-byte value as hex text
+  97:  { name: "Amount, Net Settlement",                  type: FIXED,  length: 17,     encoding: ascii } # x+n16
+  98:  { name: "Payee",                                   type: FIXED,  length: 25,     encoding: ascii }
+  99:  { name: "Settlement Institution ID Code",          type: LLVAR,  maxLength: 11,  encoding: ascii }
+  100: { name: "Receiving Institution ID Code",           type: LLVAR,  maxLength: 11,  encoding: ascii }
+  101: { name: "File Name",                               type: LLVAR,  maxLength: 17,  encoding: ascii }
+  102: { name: "Account Identification 1",                type: LLVAR,  maxLength: 28,  encoding: ascii }
+  103: { name: "Account Identification 2",                type: LLVAR,  maxLength: 28,  encoding: ascii }
+  104: { name: "Transaction Description",                 type: LLLVAR, maxLength: 100, encoding: ascii }
+  105: { name: "Reserved (ISO)",                          type: LLLVAR, maxLength: 999, encoding: ascii }
+  106: { name: "Reserved (ISO)",                          type: LLLVAR, maxLength: 999, encoding: ascii }
+  107: { name: "Reserved (ISO)",                          type: LLLVAR, maxLength: 999, encoding: ascii }
+  108: { name: "Reserved (ISO)",                          type: LLLVAR, maxLength: 999, encoding: ascii }
+  109: { name: "Reserved (ISO)",                          type: LLLVAR, maxLength: 999, encoding: ascii }
+  110: { name: "Reserved (ISO)",                          type: LLLVAR, maxLength: 999, encoding: ascii }
+  111: { name: "Reserved (ISO)",                          type: LLLVAR, maxLength: 999, encoding: ascii }
+  112: { name: "Reserved (National)",                     type: LLLVAR, maxLength: 999, encoding: ascii }
+  113: { name: "Reserved (National)",                     type: LLLVAR, maxLength: 999, encoding: ascii }
+  114: { name: "Reserved (National)",                     type: LLLVAR, maxLength: 999, encoding: ascii }
+  115: { name: "Reserved (National)",                     type: LLLVAR, maxLength: 999, encoding: ascii }
+  116: { name: "Reserved (National)",                     type: LLLVAR, maxLength: 999, encoding: ascii }
+  117: { name: "Reserved (National)",                     type: LLLVAR, maxLength: 999, encoding: ascii }
+  118: { name: "Reserved (National)",                     type: LLLVAR, maxLength: 999, encoding: ascii }
+  119: { name: "Reserved (National)",                     type: LLLVAR, maxLength: 999, encoding: ascii }
+  120: { name: "Reserved (Private)",                      type: LLLVAR, maxLength: 999, encoding: ascii }
+  121: { name: "Reserved (Private)",                      type: LLLVAR, maxLength: 999, encoding: ascii }
+  122: { name: "Reserved (Private)",                      type: LLLVAR, maxLength: 999, encoding: ascii }
+  123: { name: "Reserved (Private)",                      type: LLLVAR, maxLength: 999, encoding: ascii }
+  124: { name: "Reserved (Private)",                      type: LLLVAR, maxLength: 999, encoding: ascii }
+  125: { name: "Reserved (Private)",                      type: LLLVAR, maxLength: 999, encoding: ascii }
+  126: { name: "Reserved (Private)",                      type: LLLVAR, maxLength: 999, encoding: ascii }
+  127: { name: "Reserved (Private)",                      type: LLLVAR, maxLength: 999, encoding: ascii }
+  128: { name: "Message Authentication Code (MAC)",       type: FIXED,  length: 16,     encoding: ascii } # 8-byte MAC as hex text

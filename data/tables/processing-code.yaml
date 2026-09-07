@@ -1,0 +1,33 @@
+# Breakdown tables for field 3, Processing Code (6 digits):
+#   positions 1-2: transaction type
+#   positions 3-4: account type, "from" (source)
+#   positions 5-6: account type, "to"   (destination)
+
+transactionType:
+  "00": Purchase (goods and services)
+  "01": Cash withdrawal
+  "02": Adjustment (debit)
+  "09": Purchase with cashback
+  "10": Payment
+  "17": Cash disbursement
+  "20": Refund / return
+  "21": Deposit
+  "22": Adjustment (credit)
+  "28": Payment / prepaid load
+  "30": Balance inquiry
+  "31": Available funds inquiry
+  "40": Transfer between accounts
+  "50": Payment (bill payment)
+  "72": PIN change
+  "92": Mini statement / transaction history
+
+# Account types apply to both the "from" and "to" positions.
+accountType:
+  "00": Default (unspecified) account
+  "10": Savings account
+  "20": Checking account
+  "30": Credit account
+  "40": Universal account
+  "50": Investment account
+  "60": Electronic purse / stored value
+  "90": Default - by network rules
