@@ -1,4 +1,4 @@
-package parser
+package iso8583
 
 import (
 	"encoding/hex"
@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Witkas/iso8583lens/internal/packager"
+	"github.com/Witkas/iso8583lens/packager"
 )
 
 // sampleHex is the hand-verified 0100 authorization request also shipped in
@@ -163,7 +163,7 @@ func TestParseMalformed(t *testing.T) {
 			}
 			var perr *Error
 			if !errors.As(err, &perr) {
-				t.Fatalf("error type = %T, want *parser.Error", err)
+				t.Fatalf("error type = %T, want *iso8583.Error", err)
 			}
 			if !strings.Contains(err.Error(), tc.wantSub) {
 				t.Errorf("error %q does not contain %q", err.Error(), tc.wantSub)

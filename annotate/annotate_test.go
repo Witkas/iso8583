@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Witkas/iso8583lens/internal/parser"
+	iso8583 "github.com/Witkas/iso8583lens"
 )
 
 func mustAnnotator(t *testing.T) *Annotator {
@@ -18,9 +18,9 @@ func mustAnnotator(t *testing.T) *Annotator {
 
 func annotateOne(t *testing.T, a *Annotator, number int, value string) AnnotatedField {
 	t.Helper()
-	msg := &parser.Message{
+	msg := &iso8583.Message{
 		MTI: "0100",
-		Fields: map[int]parser.Field{
+		Fields: map[int]iso8583.Field{
 			number: {Number: number, Name: "field", Value: value},
 		},
 	}
