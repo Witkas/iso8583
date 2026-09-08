@@ -108,6 +108,7 @@ go build -o iso8583lens ./cmd/iso8583lens
 ./iso8583lens parse testdata/auth-0100.hex        # formatted table
 ./iso8583lens parse testdata/auth-0100.hex --json # JSON
 ./iso8583lens parse --hex 30313030...             # from a hex string
+./iso8583lens validate testdata/auth-0100.hex     # sanity checks (non-zero exit on errors)
 ```
 
 A `.bin` file is read as raw bytes; any other file (e.g. `.hex`) is read as a

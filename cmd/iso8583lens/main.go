@@ -31,7 +31,7 @@ func newRootCmd() *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: false,
 	}
-	root.AddCommand(newParseCmd())
+	root.AddCommand(newParseCmd(), newValidateCmd())
 	return root
 }
 
@@ -79,6 +79,54 @@ func newParseCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&hexStr, "hex", "", "decode from this hex string instead of a file")
 	cmd.Flags().BoolVar(&asJSON, "json", false, "output JSON instead of a formatted table")
+	return cmd
+}
+
+func newValidateCmd() *cobra.Command {
+	var hexStr string
+
+	cmd := &cobra.Command{
+		Use:   "validate [file]",
+		Short: "Decode a message and report sanity-check findings",
+		Long: "Decode an ISO 8583 message and run common sanity checks (Luhn on the\n" +
+			"PAN, numeric amounts, well-formed currency codes), printing any findings.\n\n" +
+			"Exits non-zero if any error-severity finding is reported, so it can gate\n" +
+			"a pipeline. Input is provided the same way as `parse`.",
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			raw, err := readInput(hexStr, args)
+			if err != nil {
+				return err
+			}
+			pkg, err := packager.Default()
+			if err != nil {
+				return err
+			}
+			msg, err := iso8583.Parse(raw, pkg)
+			if err != nil {
+				return err
+			}
+
+			findings := iso8583.Validate(msg)
+			out := cmd.OutOrStdout()
+			if len(findings) == 0 {
+				fmt.Fprintln(out, "OK: no findings")
+				return nil
+			}
+			hasError := false
+			for _, f := range findings {
+				fmt.Fprintln(out, f.String())
+				if f.Severity == iso8583.SeverityError {
+					hasError = true
+				}
+			}
+			if hasError {
+				return fmt.Errorf("%d finding(s), including errors", len(findings))
+			}
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&hexStr, "hex", "", "validate this hex string instead of a file")
 	return cmd
 }
 

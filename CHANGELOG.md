@@ -14,6 +14,9 @@ reaches v1.
 - `Message.Pack` — serialize a message to wire bytes, computing the bitmap
   (including a secondary bitmap) and `LLVAR`/`LLLVAR` length prefixes.
 - `NewMessage` — assemble a message from field values, ready to `Pack`.
+- `Validate` — advisory sanity checks over a parsed message (Luhn on the PAN,
+  numeric amounts, well-formed currency codes), returning structured `Finding`s.
+- CLI `validate` subcommand, exiting non-zero on error-severity findings.
 - Package documentation and runnable examples (`ExampleParse`,
   `ExampleMessage_Pack`).
 - `ROADMAP.md`, `LICENSE` (MIT), and this changelog.
