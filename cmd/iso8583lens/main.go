@@ -11,9 +11,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Witkas/iso8583lens/internal/annotate"
-	"github.com/Witkas/iso8583lens/internal/packager"
-	"github.com/Witkas/iso8583lens/internal/parser"
+	"github.com/Witkas/iso8583lens/annotate"
+	"github.com/Witkas/iso8583lens/packager"
+	iso8583 "github.com/Witkas/iso8583lens"
 )
 
 func main() {
@@ -59,7 +59,7 @@ func newParseCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			msg, err := parser.Parse(raw, pkg)
+			msg, err := iso8583.Parse(raw, pkg)
 			if err != nil {
 				return err
 			}

@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/Witkas/iso8583lens/data"
-	"github.com/Witkas/iso8583lens/internal/parser"
+	iso8583 "github.com/Witkas/iso8583lens"
 	"gopkg.in/yaml.v3"
 )
 
@@ -91,7 +91,7 @@ func loadYAML(name string, into any) error {
 }
 
 // Annotate produces the annotated view of a parsed message.
-func (a *Annotator) Annotate(m *parser.Message) Result {
+func (a *Annotator) Annotate(m *iso8583.Message) Result {
 	res := Result{
 		MTI:        m.MTI,
 		MTIMeaning: a.mtiMeaning(m.MTI),

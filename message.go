@@ -1,17 +1,16 @@
-// Package parser implements layer 1 of iso8583lens: turning raw message
-// bytes into a structured Message according to a packager definition.
-//
-// It is deliberately free of any human-facing lookups (response-code
-// meanings, MCC descriptions, and so on) — those belong to the annotate
-// layer. Here we only decode the wire format into field values.
-package parser
+// This file implements decoding: turning raw message bytes into a structured
+// Message according to a packager definition. It is deliberately free of any
+// human-facing lookups (response-code meanings, MCC descriptions, and so on) —
+// those belong to the annotate package. Here we only decode the wire format
+// into field values. See pack.go for the inverse (Message -> bytes).
+package iso8583
 
 import (
 	"errors"
 	"fmt"
 	"sort"
 
-	"github.com/Witkas/iso8583lens/internal/packager"
+	"github.com/Witkas/iso8583lens/packager"
 )
 
 // Field is a single decoded data element.

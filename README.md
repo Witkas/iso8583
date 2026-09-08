@@ -2,8 +2,7 @@
 
 A command-line tool that decodes a raw **ISO 8583** message and prints a
 fully annotated, human-readable breakdown of every field. Pure, deterministic
-parsing and static table lookups — no network calls, no external services, no
-AI.
+parsing and static table lookups.
 
 ## What is ISO 8583?
 
