@@ -1,144 +1,159 @@
 # iso8583lens
 
-A command-line tool that decodes a raw **ISO 8583** message and prints a
-fully annotated, human-readable breakdown of every field. Pure, deterministic
-parsing and static table lookups.
+[![Go Reference](https://pkg.go.dev/badge/github.com/Witkas/iso8583lens.svg)](https://pkg.go.dev/github.com/Witkas/iso8583lens)
+[![CI](https://github.com/Witkas/iso8583lens/actions/workflows/ci.yml/badge.svg)](https://github.com/Witkas/iso8583lens/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+A Go library for **decoding and encoding ISO 8583 card-payment messages** — with
+the error-prone parts (bitmaps, MTI, variable-length prefixes, field encoding)
+done for you. A CLI ships alongside it for quick inspection from the terminal.
+
+> **Status:** early and evolving. The library API may change before v1. See
+> [ROADMAP.md](ROADMAP.md) for where this is headed (round-trip editing,
+> BCD/binary encodings, an optional LLM-assisted generator, and a browser demo).
 
 ## What is ISO 8583?
 
-ISO 8583 is the international standard message format that card payment
-networks use to move authorization and clearing traffic between terminals,
-acquirers, switches, and card issuers. Every time you tap or swipe a card, a
-compact binary message in roughly this shape is what actually crosses the
-wire. It is dense and delimiter-free, which makes it fast to transmit and
-genuinely hard to read by eye — which is what this tool is for.
+ISO 8583 is the international message format card networks use to move
+authorization and clearing traffic between terminals, acquirers, switches, and
+issuers. Every time you tap or swipe a card, a compact binary message in roughly
+this shape crosses the wire. It is dense and delimiter-free — fast to transmit,
+genuinely hard to read by eye, and easy to get wrong when you hand-roll the
+bitmap and length math. This library exists to take that math off your plate.
 
-## What it does
+## Install
 
-Given a raw message (as a hex string or a file), `iso8583lens`:
-
-- reads the **MTI** (message type indicator) and labels it,
-- parses the **bitmap(s)** to determine which data elements are present,
-- decodes each **data element** (fixed-length and `LLVAR`/`LLLVAR`
-  variable-length) into its value, and
-- **annotates** the important fields with plain-language meaning: response
-  codes, the processing-code breakdown, merchant category codes, and amounts.
-
-## Quick start
+```sh
+go get github.com/Witkas/iso8583lens
+```
 
 Requires Go 1.22+.
 
-```sh
-# Build the binary
-go build -o iso8583lens ./cmd/iso8583lens
+## Library usage
 
-# Decode the shipped sample (a 0100 authorization request)
-./iso8583lens parse testdata/auth-0100.hex
+### Decode
+
+```go
+import (
+    "encoding/hex"
+
+    iso8583 "github.com/Witkas/iso8583lens"
+    "github.com/Witkas/iso8583lens/packager"
+)
+
+p, _ := packager.Default()
+raw, _ := hex.DecodeString("30313030...") // your message bytes
+msg, err := iso8583.Parse(raw, p)
+// msg.MTI, msg.Bitmap, msg.Fields[2].Value, ...
 ```
 
-Expected output:
+`Parse` reads the MTI, walks the bitmap(s) to learn which data elements are
+present, and decodes each one — fixed-length and `LLVAR`/`LLLVAR`
+variable-length.
+
+### Encode
+
+```go
+msg := iso8583.NewMessage("0100", map[int]string{
+    2:  "4556737586899855", // PAN — LLVAR length prefix computed for you
+    3:  "000000",           // processing code
+    4:  "000000004500",     // amount: 45.00
+    49: "840",              // currency: USD
+})
+raw, err := msg.Pack(p)
+```
+
+`Pack` is the inverse of `Parse`: it computes the bitmap (including a secondary
+bitmap when any field above 64 is present) and writes each variable-length
+field's length prefix. You set field values; the library handles the wire
+format. `Parse` and `Pack` round-trip — packing a parsed message reproduces the
+original bytes.
+
+### Human-readable meaning
+
+The `annotate` package attaches plain-language meaning to a parsed message —
+response codes, MCC descriptions, processing-code breakdowns, and amounts —
+using static lookup tables (no network, no model calls).
+
+```go
+import "github.com/Witkas/iso8583lens/annotate"
+
+a, _ := annotate.New()
+result := a.Annotate(msg) // result.Fields[i].Meaning
+```
+
+## Field layout lives in data, not code
+
+How each part of a message is encoded — the MTI width, the bitmap encoding, and
+every data element's length discipline and encoding — is described by a
+**packager** definition loaded from YAML ([`data/packagers/default.yaml`](data/packagers/default.yaml)),
+not hardcoded in Go. A new scheme dialect is a new YAML file. The shipped default
+implements the classic **ISO 8583:1987** 128-element layout in an ASCII flavour:
+
+- **MTI:** 4 ASCII digits.
+- **Bitmap:** raw binary, 8 bytes per block; bit 1 set means a secondary bitmap
+  follows, extending coverage to fields 65–128.
+- **Fields:** ASCII. Fixed-length fields have a known width; `LLVAR`/`LLLVAR`
+  fields carry a 2- or 3-digit ASCII length prefix.
+
+Encoding is declared per message part, so a future binary/BCD dialect reuses the
+same structure.
+
+## CLI
+
+The `iso8583lens` command is a thin consumer of the library.
+
+```sh
+go build -o iso8583lens ./cmd/iso8583lens
+./iso8583lens parse testdata/auth-0100.hex        # formatted table
+./iso8583lens parse testdata/auth-0100.hex --json # JSON
+./iso8583lens parse --hex 30313030...             # from a hex string
+```
+
+A `.bin` file is read as raw bytes; any other file (e.g. `.hex`) is read as a
+hex string, tolerating whitespace and an optional `0x` prefix. The table output
+masks the PAN (first 6 + last 4); `--json` preserves the decoded value.
+
+Example output:
 
 ```
 MTI: 0100 (Authorization Request)
 
 FIELD  NAME                              VALUE             MEANING
 002    Primary Account Number (PAN)      455673xxxxxx9855
-003    Processing Code                   000000            Purchase (goods and services); from Default (unspecified) account; to Default (unspecified) account
+003    Processing Code                   000000            Purchase (goods and services); from Default account; to Default account
 004    Amount, Transaction               000000004500      45.00
-007    Transmission Date and Time        0906120000
-011    System Trace Audit Number (STAN)  000123
-012    Time, Local Transaction           120000
-013    Date, Local Transaction           0906
 018    Merchant Type (MCC)               5411              Grocery stores and supermarkets
-041    Card Acceptor Terminal ID         TERM0001
-042    Card Acceptor ID Code             MERCHANT0000123
 049    Currency Code, Transaction        840
-
-Amounts are shown assuming a 2-decimal currency.
 ```
-
-## Usage
-
-```
-iso8583lens parse <file>           # decode a file, print a formatted table
-iso8583lens parse <file> --json    # decode a file, print JSON
-iso8583lens parse --hex <string>   # decode from a hex string argument
-```
-
-A `.bin` file is read as raw bytes; any other file (e.g. `.hex`) is read as a
-hex string. Hex input tolerates whitespace and an optional `0x` prefix.
 
 ## Authorization vs. clearing
 
 A card transaction generally happens in two stages. **Authorization**
-(message types in the `01xx`/`02xx` range) is the real-time check that asks
-the issuer "is this card valid and are the funds available?" and gets back an
-approve/decline — it places a hold but usually moves no money. **Clearing and
-settlement** (typically `02xx` presentments feeding batch settlement) is the
-later step where the actual funds are exchanged between the acquirer and
-issuer. The two stages carry overlapping but different fields, which is
-exactly why a tool that decodes any message by its bitmap — rather than
-assuming one fixed layout — is useful.
-
-## How it is built
-
-Two layers, each with its data kept out of the Go code so the tool is easy to
-extend:
-
-- **Layer 1 — parser** (`internal/parser`): decodes the wire format into a
-  structured `Message`. Field layouts (length discipline, encoding, names)
-  live in a **packager** definition — `data/packagers/default.yaml` — not in
-  Go, so a new dialect can be added by writing YAML.
-- **Layer 2 — annotator** (`internal/annotate`): attaches human-readable
-  meaning using static lookup tables in `data/tables/` (response codes, MCC,
-  MTI, and the processing-code sub-fields).
-
-### The default dialect
-
-The shipped packager implements the classic 128-element **ISO 8583:1987**
-layout (the same field set commonly referenced via jPOS's generic packager),
-in an **ASCII** flavour:
-
-- **MTI**: 4 ASCII digits.
-- **Bitmap**: raw binary, 8 bytes per block; bit 1 set means a secondary
-  bitmap follows, extending coverage to fields 65–128.
-- **Fields**: ASCII. Fixed-length fields have a known width; `LLVAR`/`LLLVAR`
-  fields carry a 2- or 3-digit ASCII length prefix.
-
-Encoding is declared per message part in the packager schema, so a future
-binary/BCD dialect can reuse the same structure.
+(`01xx`/`02xx`) is the real-time check that asks the issuer "is this card valid
+and are the funds available?" — it places a hold but usually moves no money.
+**Clearing and settlement** is the later step where funds actually change hands.
+The two stages carry overlapping but different fields, which is exactly why a
+library that decodes any message by its bitmap — rather than assuming one fixed
+layout — is useful.
 
 ## Notes and simplifications
 
-- **PAN masking**: the table output masks the card number (first 6 + last 4).
-  The `--json` output preserves the decoded value as parsed.
-- **Amounts** are formatted assuming a 2-decimal currency, which covers most
-  currencies; the true minor-unit exponent depends on the transaction
-  currency (field 49).
-- **MCC table** (`data/tables/mcc.yaml`) is a common-category subset, not the
-  full ISO 18245 registry. Unknown codes are reported as unknown rather than
-  guessed.
+- **Amounts** are formatted assuming a 2-decimal currency (the common case); the
+  true minor-unit exponent depends on the transaction currency (field 49).
+- **MCC table** is a common-category subset, not the full ISO 18245 registry.
+  Unknown codes are reported as unknown rather than guessed.
+- **Pack is strict about fixed-field width** — it does not silently pad, because
+  correct padding (zero-left for numeric, space-right for alphanumeric) depends
+  on field semantics the schema does not yet carry.
 
-## Tests
+## Development
 
 ```sh
-go test ./...
+go test ./...   # unit tests, round-trip tests, and runnable examples
+go vet ./...
 ```
 
-Coverage includes a full realistic 0100 message fixture, secondary-bitmap
-handling, the annotation lookups, and every malformed-input failure mode
-(short MTI, short/missing bitmap, truncated fixed and variable fields,
-non-numeric length prefixes, and undefined fields flagged in the bitmap).
+## License
 
-## Not yet built (future work)
-
-This is phase 1 of a larger idea. Explicitly out of scope here, planned for
-later specs:
-
-- A **generator / reverse mode** that builds a valid message from a
-  natural-language or structured description.
-- Any **LLM / AI-assisted** explanation layer, and retrieval (RAG) of scheme
-  documentation.
-- **Binary/BCD** field encodings (the schema is structured for it; the parser
-  does not implement it yet).
-- Additional **scheme dialects** beyond the one default packager.
+[MIT](LICENSE)
