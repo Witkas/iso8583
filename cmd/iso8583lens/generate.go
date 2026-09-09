@@ -40,7 +40,7 @@ func newGenerateCmd() *cobra.Command {
 			}
 
 			prompt := strings.Join(args, " ")
-			msg, raw, err := iso8583.Generate(cmd.Context(), gen, pkg, prompt)
+			_, raw, err := iso8583.Generate(cmd.Context(), gen, pkg, prompt)
 			if err != nil {
 				return err
 			}
@@ -48,11 +48,18 @@ func newGenerateCmd() *cobra.Command {
 			out := cmd.OutOrStdout()
 			fmt.Fprintf(out, "hex: %x\n\n", raw)
 
+			// Decode the packed bytes for display so the table shows field
+			// names from the packager (the generated message carries values
+			// only) and reflects exactly what these bytes parse to.
+			decoded, err := iso8583.Parse(raw, pkg)
+			if err != nil {
+				return err
+			}
 			annotator, err := annotate.New()
 			if err != nil {
 				return err
 			}
-			return renderTable(out, annotator.Annotate(msg))
+			return renderTable(out, annotator.Annotate(decoded))
 		},
 	}
 	cmd.Flags().StringVar(&provider, "provider", "claude", "LLM provider: claude or openai")
