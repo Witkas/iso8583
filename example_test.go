@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	iso8583 "github.com/Witkas/iso8583lens"
-	"github.com/Witkas/iso8583lens/packager"
+	"github.com/Witkas/iso8583"
+	"github.com/Witkas/iso8583/packager"
 )
 
 // ExampleParse decodes a raw 0100 authorization request into its fields.

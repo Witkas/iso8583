@@ -7,7 +7,7 @@ package packager
 import (
 	"fmt"
 
-	"github.com/Witkas/iso8583lens/data"
+	"github.com/Witkas/iso8583/data"
 	"gopkg.in/yaml.v3"
 )
 

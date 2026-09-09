@@ -1,4 +1,4 @@
-module github.com/Witkas/iso8583lens
+module github.com/Witkas/iso8583
 
 go 1.22
 

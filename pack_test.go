@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Witkas/iso8583lens/packager"
+	"github.com/Witkas/iso8583/packager"
 )
 
 // TestPackRoundTripsParse is the central guarantee: for a message Parse

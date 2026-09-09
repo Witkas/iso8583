@@ -21,6 +21,13 @@ reaches v1.
   `ExampleMessage_Pack`).
 - `ROADMAP.md`, `LICENSE` (MIT), and this changelog.
 
+### Changed
+- Module path is now `github.com/Witkas/iso8583` (package `iso8583`), removing
+  the package-name/path mismatch; the GitHub repository was renamed to match.
+  The CLI command remains `iso8583lens`. Consumers import
+  `github.com/Witkas/iso8583` and call `iso8583.Parse` / `iso8583.Pack` with no
+  import alias.
+
 ### Notes
 - `Parse` and `Pack` round-trip: packing a parsed message reproduces the
   original bytes.

@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/Witkas/iso8583lens/packager"
+	"github.com/Witkas/iso8583/packager"
 )
 
 // Field is a single decoded data element.

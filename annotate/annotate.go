@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	iso8583 "github.com/Witkas/iso8583lens"
-	"github.com/Witkas/iso8583lens/data"
+	"github.com/Witkas/iso8583"
+	"github.com/Witkas/iso8583/data"
 	"gopkg.in/yaml.v3"
 )
 
