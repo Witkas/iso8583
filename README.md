@@ -8,6 +8,10 @@ A Go library for **decoding and encoding ISO 8583 card-payment messages** — wi
 the error-prone parts (bitmaps, MTI, variable-length prefixes, field encoding)
 done for you. A CLI ships alongside it for quick inspection from the terminal.
 
+**▶ [Try the live decoder in your browser](https://witkas.github.io/iso8583/)** —
+the library compiled to WebAssembly; paste a hex message and see it decoded,
+entirely client-side.
+
 > **Status:** early and evolving. The library API may change before v1. See
 > [ROADMAP.md](ROADMAP.md) for where this is headed (round-trip editing,
 > BCD/binary encodings, an optional LLM-assisted generator, and a browser demo).

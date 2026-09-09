@@ -20,6 +20,8 @@ reaches v1.
 - **BCD (packed-decimal) field encoding.** Fields may be declared `encoding:
   bcd`; `Parse` and `Pack` handle packed values and packed length prefixes
   (two digits per byte). A shipped `bcd-demo` dialect exercises it.
+- **Browser demo (WebAssembly).** The decoder compiles to WASM (`cmd/wasm`) and
+  is served via GitHub Pages — paste a hex message and decode it client-side.
 - Package documentation and runnable examples (`ExampleParse`,
   `ExampleMessage_Pack`).
 - `ROADMAP.md`, `LICENSE` (MIT), and this changelog.

@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iso8583 — ISO 8583 message decoder</title>
+<style>
+  :root {
+    --bg: #f7f7f8; --panel: #ffffff; --ink: #1a1a1f; --muted: #6b6b76;
+    --line: #e4e4e9; --accent: #2f6f4f; --accent-ink: #ffffff;
+    --warn: #b26a00; --err: #b00020; --mono-bg: #f0f0f3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16171a; --panel: #1e1f24; --ink: #ececf1; --muted: #9a9aa6;
+      --line: #2c2d34; --accent: #4fae7f; --accent-ink: #08160f;
+      --warn: #e0a13a; --err: #ff6b7f; --mono-bg: #101115;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 40px 20px 80px; }
+  header h1 { margin: 0 0 4px; font-size: 28px; letter-spacing: -0.02em; }
+  header p { margin: 0; color: var(--muted); }
+  code, .mono { font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 18px; margin-top: 22px;
+  }
+  label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; }
+  textarea {
+    width: 100%; min-height: 96px; resize: vertical; padding: 12px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--mono-bg);
+    color: var(--ink); font-family: ui-monospace, Menlo, monospace; font-size: 13px;
+  }
+  .row { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+  button {
+    background: var(--accent); color: var(--accent-ink); border: 0; cursor: pointer;
+    padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 14px;
+  }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .hint { color: var(--muted); font-size: 13px; }
+  .mti {
+    font-size: 18px; font-weight: 700; margin: 4px 0 16px;
+  }
+  .mti small { font-weight: 500; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  td.num, td.val { font-family: ui-monospace, Menlo, monospace; white-space: nowrap; }
+  td.meaning { color: var(--muted); }
+  .tablewrap { overflow-x: auto; }
+  .findings { margin-top: 16px; }
+  .finding { padding: 8px 10px; border-radius: 8px; font-size: 13px; margin-top: 6px; }
+  .finding.error { background: color-mix(in srgb, var(--err) 12%, transparent); color: var(--err); }
+  .finding.warning { background: color-mix(in srgb, var(--warn) 14%, transparent); color: var(--warn); }
+  .error-box { color: var(--err); font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>iso8583</h1>
+    <p>Decode an ISO 8583 card-payment message in your browser. Nothing leaves this page.</p>
+  </header>
+
+  <div class="panel">
+    <label for="hex">Message (hex)</label>
+    <textarea id="hex" spellcheck="false">303130307238400000c080003136343535363733373538363839393835353030303030303030303030303030343530303039303631323030303030303031323331323030303030393036353431315445524d303030314d45524348414e5430303030313233383430</textarea>
+    <div class="row">
+      <button id="decode" disabled>Loading…</button>
+      <span class="hint" id="status">Fetching the WebAssembly decoder…</span>
+    </div>
+  </div>
+
+  <div class="panel" id="output" hidden></div>
+
+  <footer>
+    Powered by the <a href="https://github.com/Witkas/iso8583">github.com/Witkas/iso8583</a>
+    Go library, compiled to WebAssembly. The default packager implements the classic
+    ISO 8583:1987 ASCII layout. The PAN is masked for display.
+  </footer>
+</div>
+
+<script src="wasm_exec.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const btn = $("decode"), statusEl = $("status"), out = $("output");
+
+  function maskPAN(pan) {
+    if (pan.length <= 10) return pan;
+    return pan.slice(0, 6) + "x".repeat(pan.length - 10) + pan.slice(-4);
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  }
+
+  function render(res) {
+    out.hidden = false;
+    if (!res.ok) {
+      out.innerHTML = '<div class="error-box">✗ ' + esc(res.error || "parse failed") + "</div>";
+      return;
+    }
+    let html = '<div class="mti">MTI ' + esc(res.mti);
+    if (res.mtiMeaning) html += ' <small>' + esc(res.mtiMeaning) + "</small>";
+    html += "</div>";
+
+    html += '<div class="tablewrap"><table><thead><tr>' +
+      "<th>Field</th><th>Name</th><th>Value</th><th>Meaning</th></tr></thead><tbody>";
+    for (const f of res.fields || []) {
+      const val = f.number === 2 ? maskPAN(f.value) : f.value;
+      html += "<tr>" +
+        '<td class="num">' + String(f.number).padStart(3, "0") + "</td>" +
+        "<td>" + esc(f.name) + "</td>" +
+        '<td class="val">' + esc(val) + "</td>" +
+        '<td class="meaning">' + esc(f.meaning || "") + "</td></tr>";
+    }
+    html += "</tbody></table></div>";
+
+    if (res.findings && res.findings.length) {
+      html += '<div class="findings">';
+      for (const fd of res.findings) {
+        html += '<div class="finding ' + esc(fd.severity) + '">' +
+          "[" + esc(fd.severity) + "] " +
+          (fd.field ? "field " + fd.field : "MTI") + ": " + esc(fd.message) + "</div>";
+      }
+      html += "</div>";
+    }
+    out.innerHTML = html;
+  }
+
+  function run() {
+    try {
+      const res = JSON.parse(parseISO8583($("hex").value));
+      render(res);
+    } catch (e) {
+      out.hidden = false;
+      out.innerHTML = '<div class="error-box">✗ ' + esc(e.message || e) + "</div>";
+    }
+  }
+
+  (async () => {
+    try {
+      const go = new Go();
+      const resp = await fetch("iso8583.wasm");
+      const bytes = await resp.arrayBuffer();
+      const { instance } = await WebAssembly.instantiate(bytes, go.importObject);
+      go.run(instance);
+      btn.textContent = "Decode";
+      btn.disabled = false;
+      statusEl.textContent = "Ready — runs entirely in your browser.";
+      btn.addEventListener("click", run);
+      run(); // decode the prefilled sample immediately
+    } catch (e) {
+      statusEl.textContent = "Failed to load decoder: " + (e.message || e);
+    }
+  })();
+</script>
+</body>
+</html>
