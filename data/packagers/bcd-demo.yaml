@@ -1,0 +1,20 @@
+name: bcd-demo
+description: >
+  A small mixed dialect that packs its data elements in BCD (two decimal digits
+  per byte). The MTI stays ASCII and the bitmap stays binary; only the fields
+  differ from the default packager, demonstrating that the schema generalizes to
+  a packed encoding without any Go changes.
+
+mti:
+  length: 4
+  encoding: ascii
+
+bitmap:
+  encoding: binary
+
+fields:
+  2:  { name: "Primary Account Number (PAN)", type: LLVAR, maxLength: 19, encoding: bcd }
+  3:  { name: "Processing Code",               type: FIXED, length: 6,    encoding: bcd }
+  4:  { name: "Amount, Transaction",           type: FIXED, length: 12,   encoding: bcd }
+  11: { name: "System Trace Audit Number",     type: FIXED, length: 6,    encoding: bcd }
+  49: { name: "Currency Code, Transaction",    type: FIXED, length: 3,    encoding: bcd }

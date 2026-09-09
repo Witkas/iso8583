@@ -89,13 +89,16 @@ func buildBitmap(fields []int) ([]byte, error) {
 }
 
 // encodeField serializes one data element: a length prefix (for LLVAR/LLLVAR)
-// followed by the value. Only ASCII field encoding is implemented, matching the
-// parser.
+// followed by the value. Both honour the field's encoding — ASCII bytes or
+// BCD-packed nibbles. Lengths are always counted in digits/characters, not
+// wire bytes, so a BCD field's length prefix carries the same number as its
+// ASCII counterpart.
 func encodeField(n int, f Field, def packager.FieldDef) ([]byte, error) {
-	if def.Encoding != packager.ASCII {
-		return nil, fmt.Errorf("pack: field %d (%s): unsupported encoding %q (only %q is implemented)", n, def.Name, def.Encoding, packager.ASCII)
+	if def.Encoding != packager.ASCII && def.Encoding != packager.BCD {
+		return nil, fmt.Errorf("pack: field %d (%s): unsupported encoding %q", n, def.Name, def.Encoding)
 	}
 	value := f.Value
+	var out []byte
 
 	if prefixDigits := def.Type.LengthPrefixDigits(); prefixDigits > 0 {
 		if len(value) > def.MaxLength {
@@ -104,18 +107,24 @@ func encodeField(n int, f Field, def packager.FieldDef) ([]byte, error) {
 		if max := pow10(prefixDigits); len(value) >= max {
 			return nil, fmt.Errorf("pack: field %d (%s): value length %d does not fit in a %d-digit length prefix", n, def.Name, len(value), prefixDigits)
 		}
-		prefix := fmt.Sprintf("%0*d", prefixDigits, len(value))
-		return []byte(prefix + value), nil
-	}
-
-	// Fixed-length: the value must be exactly the declared width. Pack is
-	// strict rather than silently padding, because the correct padding
-	// (zero-left for numeric, space-right for alphanumeric) depends on field
-	// semantics the schema does not carry.
-	if len(value) != def.Length {
+		prefix, err := encodeUnit(fmt.Sprintf("%0*d", prefixDigits, len(value)), def.Encoding)
+		if err != nil {
+			return nil, fmt.Errorf("pack: field %d (%s): length prefix: %v", n, def.Name, err)
+		}
+		out = append(out, prefix...)
+	} else if len(value) != def.Length {
+		// Fixed-length: the value must be exactly the declared width. Pack is
+		// strict rather than silently padding, because the correct padding
+		// (zero-left for numeric, space-right for alphanumeric) depends on
+		// field semantics the schema does not carry.
 		return nil, fmt.Errorf("pack: field %d (%s): value %q is %d bytes, but the field is fixed at %d", n, def.Name, value, len(value), def.Length)
 	}
-	return []byte(value), nil
+
+	body, err := encodeUnit(value, def.Encoding)
+	if err != nil {
+		return nil, fmt.Errorf("pack: field %d (%s): %v", n, def.Name, err)
+	}
+	return append(out, body...), nil
 }
 
 func pow10(n int) int {

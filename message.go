@@ -160,34 +160,48 @@ func bitsIn(block []byte, base int) map[int]bool {
 	return out
 }
 
-// decodeField reads one data element from the reader per its definition.
+// decodeField reads one data element from the reader per its definition. Both
+// the length prefix (for variable fields) and the value honour the field's
+// encoding: ASCII bytes, or BCD-packed nibbles (two digits per byte).
 func decodeField(r *reader, n int, def packager.FieldDef) (Field, error) {
 	length := def.Length
 
 	if prefixDigits := def.Type.LengthPrefixDigits(); prefixDigits > 0 {
-		prefix, err := r.take(prefixDigits)
+		prefixBytes := unitByteLen(prefixDigits, def.Encoding)
+		prefixAt := r.pos
+		prefix, err := r.take(prefixBytes)
 		if err != nil {
 			return Field{}, newErr(r.pos, "field %d (%s): message ended while reading its %d-digit length prefix", n, def.Name, prefixDigits)
 		}
-		length, err = atoiStrict(prefix)
+		lenStr, err := decodeUnit(prefix, prefixDigits, def.Encoding)
 		if err != nil {
-			return Field{}, newErr(r.pos-prefixDigits, "field %d (%s): length prefix %q is not numeric", n, def.Name, string(prefix))
+			return Field{}, newErr(prefixAt, "field %d (%s): length prefix %x is not valid: %v", n, def.Name, prefix, err)
+		}
+		length, err = atoiStrict([]byte(lenStr))
+		if err != nil {
+			return Field{}, newErr(prefixAt, "field %d (%s): length prefix %q is not numeric", n, def.Name, lenStr)
 		}
 		if length > def.MaxLength {
-			return Field{}, newErr(r.pos-prefixDigits, "field %d (%s): declared length %d exceeds the field maximum of %d", n, def.Name, length, def.MaxLength)
+			return Field{}, newErr(prefixAt, "field %d (%s): declared length %d exceeds the field maximum of %d", n, def.Name, length, def.MaxLength)
 		}
 	}
 
-	value, err := r.take(length)
+	valueBytes := unitByteLen(length, def.Encoding)
+	valueAt := r.pos
+	raw, err := r.take(valueBytes)
 	if err != nil {
-		return Field{}, newErr(r.pos, "field %d (%s): needs %d bytes but only %d remain", n, def.Name, length, r.remaining())
+		return Field{}, newErr(r.pos, "field %d (%s): needs %d bytes but only %d remain", n, def.Name, valueBytes, r.remaining())
+	}
+	value, err := decodeUnit(raw, length, def.Encoding)
+	if err != nil {
+		return Field{}, newErr(valueAt, "field %d (%s): %v", n, def.Name, err)
 	}
 
 	return Field{
 		Number: n,
 		Name:   def.Name,
-		Raw:    value,
-		Value:  string(value),
+		Raw:    raw,
+		Value:  value,
 	}, nil
 }
 

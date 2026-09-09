@@ -17,6 +17,9 @@ reaches v1.
 - `Validate` — advisory sanity checks over a parsed message (Luhn on the PAN,
   numeric amounts, well-formed currency codes), returning structured `Finding`s.
 - CLI `validate` subcommand, exiting non-zero on error-severity findings.
+- **BCD (packed-decimal) field encoding.** Fields may be declared `encoding:
+  bcd`; `Parse` and `Pack` handle packed values and packed length prefixes
+  (two digits per byte). A shipped `bcd-demo` dialect exercises it.
 - Package documentation and runnable examples (`ExampleParse`,
   `ExampleMessage_Pack`).
 - `ROADMAP.md`, `LICENSE` (MIT), and this changelog.

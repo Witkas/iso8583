@@ -96,8 +96,11 @@ implements the classic **ISO 8583:1987** 128-element layout in an ASCII flavour:
 - **Fields:** ASCII. Fixed-length fields have a known width; `LLVAR`/`LLLVAR`
   fields carry a 2- or 3-digit ASCII length prefix.
 
-Encoding is declared per message part, so a future binary/BCD dialect reuses the
-same structure.
+Encoding is declared per message part. Fields may be **ASCII** or **BCD**
+(packed decimal — two digits per byte, the compact form real-world dialects
+often use); `Parse` and `Pack` handle both, including packed length prefixes.
+A shipped [`bcd-demo`](data/packagers/bcd-demo.yaml) dialect demonstrates the
+packed encoding.
 
 ## CLI
 

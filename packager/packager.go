@@ -11,13 +11,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Encoding names the wire representation of a message part. Only ASCII (and
-// binary for bitmaps) is implemented today; the type exists so a BCD/binary
-// field dialect can be added later without changing the schema shape.
+// Encoding names the wire representation of a message part.
+//
+// ASCII and BCD are both implemented for data elements; Binary is used for the
+// bitmap. In BCD ("binary-coded decimal", also called "packed"), two decimal
+// digits share one byte — one per nibble — so an N-digit value occupies
+// ceil(N/2) bytes. A BCD variable-length field also carries its length prefix
+// in packed form.
 type Encoding string
 
 const (
 	ASCII  Encoding = "ascii"
+	BCD    Encoding = "bcd"
 	Binary Encoding = "binary"
 )
 
@@ -130,9 +135,9 @@ func (p *Packager) validate() error {
 		default:
 			return fmt.Errorf("packager %q: field %d (%s) has unknown type %q", p.Name, n, f.Name, f.Type)
 		}
-		if f.Encoding != ASCII {
-			return fmt.Errorf("packager %q: field %d (%s) has unsupported encoding %q (only %q is implemented)",
-				p.Name, n, f.Name, f.Encoding, ASCII)
+		if f.Encoding != ASCII && f.Encoding != BCD {
+			return fmt.Errorf("packager %q: field %d (%s) has unsupported encoding %q (only %q and %q are implemented)",
+				p.Name, n, f.Name, f.Encoding, ASCII, BCD)
 		}
 	}
 	return nil
