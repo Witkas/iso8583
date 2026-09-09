@@ -5,7 +5,9 @@ All notable changes to this project are documented here. The format is based on
 to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) once it
 reaches v1.
 
-## [Unreleased]
+## [0.1.0] - 2026-09-09
+
+First release.
 
 ### Added
 - Public, importable library API. The decoder moved out of `internal/` into the
