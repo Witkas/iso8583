@@ -22,6 +22,13 @@ reaches v1.
   (two digits per byte). A shipped `bcd-demo` dialect exercises it.
 - **Browser demo (WebAssembly).** The decoder compiles to WASM (`cmd/wasm`) and
   is served via GitHub Pages — paste a hex message and decode it client-side.
+- **LLM-assisted generation.** `Generate` turns a natural-language description
+  into a valid message via a provider-neutral `llm.Generator` interface; the
+  model only picks field values, and `Pack` guarantees well-formed bytes.
+  Adapters `llm/claude` and `llm/openai` call their APIs over plain HTTP (no SDK
+  dependency added to the module). New CLI `generate --provider claude|openai`.
+  Keys are read from the environment (`ANTHROPIC_API_KEY` / `OPENAI_API_KEY`);
+  see `.env.example`.
 - Package documentation and runnable examples (`ExampleParse`,
   `ExampleMessage_Pack`).
 - `ROADMAP.md`, `LICENSE` (MIT), and this changelog.

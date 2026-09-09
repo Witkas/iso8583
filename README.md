@@ -86,6 +86,41 @@ a, _ := annotate.New()
 result := a.Annotate(msg) // result.Fields[i].Meaning
 ```
 
+## LLM-assisted generation (optional)
+
+Describe a transaction in plain English and get a valid message back. The model
+**only chooses field values**; `Pack` computes the bitmap and length prefixes, so
+the output is always well-formed — a cheap model is plenty.
+
+The library core stays dependency-free: it defines a provider-neutral
+[`llm.Generator`](llm/llm.go) interface, and the adapters (`llm/claude`,
+`llm/openai`) call the provider over plain HTTP — no SDK is added to the module.
+
+```go
+import (
+    "github.com/Witkas/iso8583"
+    "github.com/Witkas/iso8583/llm/claude" // or llm/openai
+    "github.com/Witkas/iso8583/packager"
+)
+
+p, _ := packager.Default()
+gen := claude.New("") // reads ANTHROPIC_API_KEY from the environment
+msg, raw, err := iso8583.Generate(ctx, gen, p, "a $45 grocery auth on card 4556737586899855")
+```
+
+**API keys** live in your environment, never in the repo or the browser. Copy
+[`.env.example`](.env.example) to `.env` (gitignored) and load it:
+
+```sh
+cp .env.example .env   # then fill in ANTHROPIC_API_KEY and/or OPENAI_API_KEY
+set -a; source .env; set +a
+```
+
+`--provider claude` uses `ANTHROPIC_API_KEY` (default model `claude-haiku-4-5`);
+`--provider openai` uses `OPENAI_API_KEY` (default `gpt-4o-mini`). Override the
+model with `ISO8583_CLAUDE_MODEL` / `ISO8583_OPENAI_MODEL`. The browser demo does
+**not** use an LLM — keys never go client-side.
+
 ## Field layout lives in data, not code
 
 How each part of a message is encoded — the MTI width, the bitmap encoding, and
@@ -116,6 +151,10 @@ go build -o iso8583lens ./cmd/iso8583lens
 ./iso8583lens parse testdata/auth-0100.hex --json # JSON
 ./iso8583lens parse --hex 30313030...             # from a hex string
 ./iso8583lens validate testdata/auth-0100.hex     # sanity checks (non-zero exit on errors)
+
+# Generate a message from plain English (needs an API key — see below)
+./iso8583lens generate --provider claude "a \$45 grocery auth on card 4556737586899855"
+./iso8583lens generate --provider openai "an 0800 network sign-on"
 ```
 
 A `.bin` file is read as raw bytes; any other file (e.g. `.hex`) is read as a
