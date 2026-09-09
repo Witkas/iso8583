@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/Witkas/iso8583lens/annotate"
+	"github.com/Witkas/iso8583/annotate"
 )
 
 // renderJSON writes the annotated result as indented JSON.

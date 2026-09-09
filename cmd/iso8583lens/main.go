@@ -11,9 +11,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	iso8583 "github.com/Witkas/iso8583lens"
-	"github.com/Witkas/iso8583lens/annotate"
-	"github.com/Witkas/iso8583lens/packager"
+	"github.com/Witkas/iso8583"
+	"github.com/Witkas/iso8583/annotate"
+	"github.com/Witkas/iso8583/packager"
 )
 
 func main() {

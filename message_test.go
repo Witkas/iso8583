@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Witkas/iso8583lens/packager"
+	"github.com/Witkas/iso8583/packager"
 )
 
 // sampleHex is the hand-verified 0100 authorization request also shipped in

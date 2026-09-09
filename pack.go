@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/Witkas/iso8583lens/packager"
+	"github.com/Witkas/iso8583/packager"
 )
 
 // Pack serializes the message to wire bytes using the given packager.

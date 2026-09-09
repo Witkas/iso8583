@@ -1,7 +1,7 @@
 # iso8583lens
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/Witkas/iso8583lens.svg)](https://pkg.go.dev/github.com/Witkas/iso8583lens)
-[![CI](https://github.com/Witkas/iso8583lens/actions/workflows/ci.yml/badge.svg)](https://github.com/Witkas/iso8583lens/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/Witkas/iso8583.svg)](https://pkg.go.dev/github.com/Witkas/iso8583)
+[![CI](https://github.com/Witkas/iso8583/actions/workflows/ci.yml/badge.svg)](https://github.com/Witkas/iso8583/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A Go library for **decoding and encoding ISO 8583 card-payment messages** — with
@@ -24,7 +24,7 @@ bitmap and length math. This library exists to take that math off your plate.
 ## Install
 
 ```sh
-go get github.com/Witkas/iso8583lens
+go get github.com/Witkas/iso8583
 ```
 
 Requires Go 1.22+.
@@ -37,8 +37,8 @@ Requires Go 1.22+.
 import (
     "encoding/hex"
 
-    iso8583 "github.com/Witkas/iso8583lens"
-    "github.com/Witkas/iso8583lens/packager"
+    "github.com/Witkas/iso8583"
+    "github.com/Witkas/iso8583/packager"
 )
 
 p, _ := packager.Default()
@@ -76,7 +76,7 @@ response codes, MCC descriptions, processing-code breakdowns, and amounts —
 using static lookup tables (no network, no model calls).
 
 ```go
-import "github.com/Witkas/iso8583lens/annotate"
+import "github.com/Witkas/iso8583/annotate"
 
 a, _ := annotate.New()
 result := a.Annotate(msg) // result.Fields[i].Meaning
